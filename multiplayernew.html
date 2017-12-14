@@ -1,0 +1,329 @@
+<html>
+<head>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.7.1/firebase.js"></script>
+	<title>rock paper scissors game</title>
+</head>
+
+<body>
+	<h1>Press Start to begin!</h1>
+	<button id="start">Start</button>
+	<button id="again">Another round</button>
+	
+	<p>Player identification number: </p>
+	<div id="id"></div>
+
+	<div id="selection">
+		<form>
+			<input type="radio" value="rock">Rock<br>
+			<input type="radio" value="paper">Paper<br>
+			<input type="radio" value="scissors">Scissors<br>
+			<!--input type="submit" value="Submit"-->
+			<!--input type="submit"-->
+		</form>
+	</div>
+	
+	<p>Your choice</p>
+	<div id="player"></div>
+
+	<button id="quit">Quit</button>
+
+	<div id="chat">
+		<div id="dialogue">
+			<p><strong>Chat dialogue</strong></p>
+		</div>
+		<form>
+			<input type="text" name="statement" value="chat here"><br>
+			<input type="submit" id="submit-chat" value="Submit">
+		</form>
+	</div>
+
+	<style>
+
+	body {
+		text-align: center;
+	}
+
+	#id {
+		background-color: red;
+	}
+
+	#selection {
+		background-color: blue;
+	}
+
+	#player {
+		background-color: green;
+	}
+
+	#chat {
+		background-color: yellow;
+	}
+	</style>
+
+	<script type="text/javascript">
+
+		  // Initialize Firebase
+		  var config = {
+		    apiKey: "AIzaSyBUekIGPOXpIbaUXDuXqZHbTvUnivwUmk0",
+		    authDomain: "rock-paper-scissors-d1d95.firebaseapp.com",
+		    databaseURL: "https://rock-paper-scissors-d1d95.firebaseio.com",
+		    projectId: "rock-paper-scissors-d1d95",
+		    storageBucket: "rock-paper-scissors-d1d95.appspot.com",
+		    messagingSenderId: "673723959113"
+		  };
+		  firebase.initializeApp(config);
+
+
+		//  document.onload = function() {
+		//  	firebase.database().ref().remove();
+		//  	alert("Page has loaded. All data has been reset. Press Start to enter the game.")
+
+		var rdm;
+		//var random;
+		var id;
+		var check;
+		var player;
+
+		firebase.database().ref().update({status: "refresh"});
+
+			firebase.database().ref().child("Player1/id").on("value", function(snap) {
+				check = snap.val();
+				console.log("check " + check);
+				if (check == null) {
+					$("h1").text("Waiting for opponent. Press start to enter game.");
+				} else {
+					$("h1").text("Opponent is ready. Press start to enter game.");
+				}
+			});
+
+
+
+		function load() {
+
+			
+
+
+
+			
+
+			if (check == null) {
+
+				rdm = Math.random()*100;
+				
+				firebase.database().ref().child("Player1").set({id: rdm});
+				firebase.database().ref().child("Player1").on("value", function(snap) {
+					id = snap.val();
+				});
+				console.log(id);
+				$("#id").text(id.id + " You are player 1.");
+				player = "Player1";
+
+				firebase.database().ref().update({status: "oneready"});
+
+				firebase.database().ref().child("status").on("value", function(snap) {
+					var cj = snap.val();
+					if (cj == "oneready") {
+						$("h1").text("Waiting for opponent. Choose your weapon!");
+					}
+					if (cj == "bothready") {
+						$("h1").text("Opponent is ready. Choose your weapon!");
+					}
+				});
+
+
+			} else {
+
+				rdm = Math.random()*100;
+
+				firebase.database().ref().child("Player2").set({id: rdm});
+				firebase.database().ref().child("Player2").on("value", function(snap) {
+					id = snap.val();
+				});
+				console.log(id);
+				$("#id").text(id.id + " You are player 2.");
+				player = "Player2";
+
+				firebase.database().ref().update({status: "bothready"});
+
+				firebase.database().ref().child("status").on("value", function(snap) {
+					var cj = snap.val();
+					if (cj == "bothready") {
+						$("h1").text("Opponent is ready. Choose your weapon!");
+					}
+				});
+
+
+			}
+		}
+
+		$("#start").click(function() {load()} );
+
+
+		var sel;
+		var obj;
+		var pOneSel;
+		var pTwoSel;
+		var pOneScore = 0;
+		var pTwoScore = 0;
+
+		$("#selection form input").click(function() {
+			sel = $(this).attr("value");
+			firebase.database().ref().child(player).set({id: rdm, selection: sel});
+	
+
+			firebase.database().ref().child(player).on("value", function(snap) {
+				obj = snap.val();
+			});
+
+			console.log(obj);
+			$("#player").text(obj.selection);
+
+
+
+
+			firebase.database().ref().child("Player1/selection").on("value", function(snap) {
+				pOneSel = snap.val();
+				console.log("ponesel " + pOneSel);
+			});
+
+			firebase.database().ref().child("Player2/selection").on("value", function(snap) {
+				pTwoSel = snap.val();
+				console.log("ptwosel " + pTwoSel);
+			});
+
+		// $(pTwoSel).change(function() {
+		// 	if (pOneSel != null && pTwoSel != null) {
+		// 		//function compare() {
+
+	//alert("HELLO");
+
+		//});
+
+				//}
+
+				firebase.database().ref().child("Player1").push({score: pOneScore});
+				firebase.database().ref().child("Player2").push({score: pTwoScore});
+				//if (pOneSel != null && pTwoSel != null) {
+					firebase.database().ref().update({status: "result"});
+				
+
+
+				firebase.database().ref().child("status").on("value", function(snap) {
+
+
+
+
+					if (pOneSel == "rock" && pTwoSel == "paper") {
+						$("h1").text("Player2 won! Want to try again?");
+						pTwoScore++;
+					} else if (pOneSel == "rock" && pTwoSel == "scissors") {
+						$("h1").text("Player1 won! Want to try again?");
+						pOneScore++;
+					} else if (pOneSel == "rock" && pTwoSel == "rock") {
+						$("h1").text("It's a draw! Want to try again?");
+					} else if (pOneSel == "paper" && pTwoSel == "rock") {
+						$("h1").text("Player1 won! Want to try again?");
+						pOneScore++;
+					} else if (pOneSel == "paper" && pTwoSel == "paper") {
+						$("h1").text("It's a draw! Want to try again?");
+					} else if (pOneSel == "paper" && pTwoSel == "scissors") {
+						$("h1").text("Player2 won! Want to try again?");
+						pTwoScore++;
+					} else if (pOneSel == "scissors" && pTwoSel == "paper") {
+						$("h1").text("Player1 won! Want to try again?");
+						pOneScore++;
+					} else if (pOneSel == "scissors" && pTwoSel == "rock") {
+						$("h1").text("Player2 won! Want to try again?");
+						pTwoScore++;
+					} else if (pOneSel == "scissors" && pTwoSel == "scissors") {
+						$("h1").text("It's a draw! Want to try again?");
+					}
+
+				});
+			//}
+
+		});
+
+
+
+
+		$("#again").click(function again() {
+			$("input").checked = false;
+			firebase.database().ref().update({status: "retry"});
+			$("#player").text(" ");
+			firebase.database().ref().child("Player1").update({selection: null});
+			firebase.database().ref().child("Player2").update({selection: null});
+		});
+
+		firebase.database().ref().child("status").on("value", function(snap) {
+			var cj = snap.val();
+			if (cj == "retry") {
+				$("h1").text("Next round has begun. Choose your weapon!");
+			}
+		});
+
+
+		$("#quit").click(function end() {
+		//	firebase.database().ref().remove();
+			firebase.database().ref().set({status: "quit"});
+		//	
+		});
+
+		firebase.database().ref().on("value", function(snap) {
+			var bj = snap.val().status;
+			if (bj == "quit") {
+				$("h1").text("Someone quit. Game over.");
+			}
+		});
+
+
+		$("#submit-chat").click(function() {
+			event.preventDefault();
+			console.log(player);
+			var obj = $("#chat form input").val().trim();
+			var newref = firebase.database().ref().child("chat").push({line: obj});
+			var newid = newref.key
+			var obs;
+			var obt;
+			var obu;
+			// firebase.database().ref().child(player).on("value", function(snap) {
+			// 	obs = snap.val().selection;
+			// 	obt = snap[0].key
+			// 	//val().orderByChild("name");
+			// 	obu = snap.getKey()
+
+				
+			 });
+
+			  firebase.database().ref().child("chat").orderByKey().on('child_added', function(snap) {
+    console.log(snap.getKey(), snap.val().line);
+    obs = snap.val().line;
+ 
+
+
+			console.log("obs " + obs);	
+			$("#dialogue").append("<p>" + obs + "</p>");
+ });		
+
+
+// window.addEventListener("beforeunload", function (e) {
+// 	end();
+// //  var confirmationMessage = "\o/";
+
+// //  (e || window.event).returnValue = confirmationMessage; //Gecko + IE
+  
+// //  return confirmationMessage;   //Webkit, Safari, Chrome
+// });
+// The following code is borrowed from Stackoverflow:
+// window.onbeforeunload = function () {
+// 	end();
+// };
+// 	firebase.database().ref().remove();
+//	$("h1").text("Someone quit. Game over.");
+
+//};
+//	};
+	</script>
+</body>
+</html>
